@@ -1,12 +1,23 @@
 #!/bin/bash
 set -e -o pipefail
 
+compose_file=/usr/share/X11/locale/$LANG/Compose
+
+if [[ -n $LANG && -r $compose_file ]]; then
+    read_compose="cat $compose_file"
+else
+    read_compose="tail -n +$(( $LINENO + 2 )) $0"
+    compose_file="embedded en_US.UTF-8 map from Ubuntu 14.04.2 LTS"
+fi
+
 if [[ -z "$1" ]]; then
     cat <<USAGE
 usage: $(basename $0) search-pattern
 
 greps compose key chords so you can learn, or remember, how to type all those
 fun Unicode characters.
+
+Reading from: $compose_file
 
 Examples:
   $ $(basename $0) heart
@@ -24,7 +35,7 @@ if [[ -t 1 ]]; then
 else
     PAGER=cat
 fi
-tail -n +$(( $LINENO + 2 )) $0 | grep -vE '^#' | grep -iE "$@" | $PAGER
+$read_compose | grep -vE '^#' | grep -iE "$@" | $PAGER
 exit $?
 
 # Source: /usr/share/X11/locale/en_US.UTF-8/Compose from Ubuntu 14.04.2 LTS
